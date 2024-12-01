@@ -24,10 +24,12 @@ fi
 if [[ ! -d $aoc_path/python ]]; then
     mkdir --parents $aoc_path/python
     cp "$script_path/template/main.py" "$aoc_path/python/main.py"
+    echo "*" > "$aoc_path/python/.gitignore"
 fi
 
 # Rust
 if [[ ! -d $aoc_path/rust ]]; then
     cargo new "$aoc_path/rust" --vcs none --name "aoc_$year-$day"
     cp "$script_path/template/main.rs" "$aoc_path/rust/src/main.rs"
+    echo "*" > "$aoc_path/rust/.gitignore"
 fi

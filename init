@@ -1,0 +1,33 @@
+#!/usr/bin/env zsh
+
+year=$1
+day=$2
+
+script=$(readlink -f "$0")
+script_path=$(dirname "$script")
+
+aoc_path=$script_path/$1/$2
+
+mkdir --parents $aoc_path
+
+if [[ ! -d $aoc_path/data ]]; then
+    # Data directory
+    mkdir --parents $aoc_path/data
+    for f in "test" "aoc"; do
+        touch "$aoc_path/puzzle.txt"
+        touch "$aoc_path/data/$f.txt"
+        echo "silver: ???\ngold: ???" > "$aoc_path/data/$f.ans"
+    done
+fi
+
+# Python
+if [[ ! -d $aoc_path/python ]]; then
+    mkdir --parents $aoc_path/python
+    cp "$script_path/template/main.py" "$aoc_path/python/main.py"
+fi
+
+# Rust
+if [[ ! -d $aoc_path/rust ]]; then
+    cargo new "$aoc_path/rust" --vcs none --name "aoc_$year-$day"
+    cp "$script_path/template/main.rs" "$aoc_path/rust/src/main.rs"
+fi

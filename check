@@ -1,0 +1,25 @@
+#!/usr/bin/env zsh
+
+year=$1
+day=$2
+lang=$3
+input=$4
+
+
+script=$(readlink -f "$0")
+script_path=$(dirname "$script")
+
+aoc_path=$script_path/$1/$2
+data_path="$aoc_path/data/$4.txt"
+
+if [[ $lang == "python" ]]; then
+    got=$(cat $data_path | python $aoc_path/python/main.py)
+elif [[ $lang == "rust" ]]; then
+    got=$(cat $data_path | cargo run --manifest-path $aoc_path/rust/Cargo.toml -- <(cat $data_path))
+else
+    echo "Unknown lang: $lang"
+    exit 1
+fi
+
+diff <(echo $got) "$aoc_path/data/$4.ans" && echo "Solved with $lang!"
+echo $got

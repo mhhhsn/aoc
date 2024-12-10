@@ -1,8 +1,7 @@
 import re
-import sys
+from fileinput import input
 
-with open(sys.argv[1], "r") as f:
-    s = f.read()
+s = "\n".join(input())
 
 silver = sum(int(x) * int(y) for x, y in re.findall(r"mul\((\d{1,3}),(\d{1,3})\)", s))
 

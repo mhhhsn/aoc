@@ -1,4 +1,5 @@
 from fileinput import input
+from functools import cache
 from itertools import takewhile
 
 inp = map(str.strip, input())
@@ -17,33 +18,23 @@ for towel in towels:
     prev[towel[-1]] = (True, curr)
 
 
-def drops(design, start=0):
+@cache
+def steps(design, n=0):
+    if n == len(design):
+        return 1
+    ways = 0
     curr = trie
-    for n, s in enumerate(design[start:], start=start + 1):
+    for d, s in enumerate(design[n:], start=1):
         if s not in curr:
-            return
+            return ways
         term, curr = curr[s]
         if term:
-            yield n
+            ways += steps(design, n + d)
+    return ways
 
 
-def match(design):
-    q = list(drops(design))
-    seen = set()
-    while q:
-        n = q.pop()
-        if n == len(design):
-            return True
-        if n in seen:
-            continue
-        seen.add(n)
-        for d in drops(design, n):
-            q.append(d)
-    return False
-
-
-silver = sum(map(match, designs))
-gold = 0
+silver = sum(map(bool, map(steps, designs)))
+gold = sum(map(steps, designs))
 
 print("silver:", silver)
 print("gold:", gold)

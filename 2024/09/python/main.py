@@ -12,36 +12,49 @@ for c in disk:
     file = not file
 
 
-expand_blocks = []
-for a, b, x in sorted(blocks):
-    for _ in range(b - a):
-        expand_blocks.append(x)
+def expand(bs):
+    return [x for a, b, x in sorted(bs) for _ in range(b - a)]
 
 
-def debug(xs):
-    for a, b, x in sorted(xs):
-        if x == -1:
-            x = "."
-        print(str(x) * (b - a), end="")
-    print()
+def debug(bs):
+    print("".join(str(b) if b != -1 else "." for b in expand(bs)))
 
 
 # Silver
-tail = len(expand_blocks) - 1
-fill = expand_blocks.index(-1)
+expanded = expand(blocks)
+tail = len(expanded) - 1
+fill = expanded.index(-1)
 while fill < tail:
-    expand_blocks[fill] = expand_blocks[tail]
-    expand_blocks[tail] = -1
-    while expand_blocks[tail] == -1:
+    expanded[fill] = expanded[tail]
+    expanded[tail] = -1
+    while expanded[tail] == -1:
         tail -= 1
-    while expand_blocks[fill] != -1:
+    while expanded[fill] != -1:
         fill += 1
+silver = sum(idx * n for idx, n in enumerate(expanded) if n != -1)
 
-silver = sum(idx * n for idx, n in enumerate(expand_blocks) if n != -1)
 
-print(blocks)
-
-gold = 0
+# Gold
+for move in blocks[::-1]:
+    print(move)
+    ma, mb, mx = move
+    if mx == -1:
+        continue
+    mlen = mb - ma
+    for tidx, to in enumerate(blocks):
+        ta, tb, tx = to
+        if ta >= ma:
+            break
+        if tx != -1:
+            continue
+        if (tlen := tb - ta) < mlen:
+            continue
+        move[2] = -1
+        to[2] = mx
+        to[1] = ta + mlen
+        blocks.insert(tidx + 1, [ta + mlen, tb, -1])
+        break
+gold = sum(idx * n for idx, n in enumerate(expand(blocks)) if n != -1)
 
 print("silver:", silver)
 print("gold:", gold)

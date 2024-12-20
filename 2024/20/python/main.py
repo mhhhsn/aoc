@@ -21,19 +21,18 @@ while q:
             continue
         q.append((x, t + 1))
 
-cheats = []
-for wall in (p for p, c in grid.items() if c == "#"):
-    for d in [1, -1, 1j, -1j]:
-        if (x := wall - d) not in grid or grid[x] == "#":
-            continue
-        if (y := wall + d) not in grid or grid[y] == "#":
-            continue
-        if (saved := times[y] - times[x] - 2) <= 0:
-            continue
-        cheats.append(saved)
 
-silver = sum(1 for c in cheats if c >= 100)
-gold = 0
+def cheat(x, y, d):
+    dist = int(abs(x.real - y.real) + abs(x.imag - y.imag))
+    if dist > d:
+        return False
+    saved = times[y] - times[x] - dist
+    return saved >= 100
+
+
+silver = sum(cheat(x, y, 2) for x in times.keys() for y in times.keys())
+gold = sum(cheat(x, y, 20) for x in times.keys() for y in times.keys())
+
 
 print("silver:", silver)
 print("gold:", gold)

@@ -1,4 +1,4 @@
-#!/usr/bin/env yash
+#!/usr/bin/env sh
 
 year=$1
 day=$2
@@ -17,9 +17,9 @@ $script_path/check $1 $2 $3 $4 > /dev/null
 [ ! $? ] && echo "Incorrect solution" && exit 1
 
 
-if [[ $lang == "python" ]]; then
+if [ $lang = "python" ]; then
     exec="python $aoc_path/python/main.py"
-elif [[ $lang == "rust" ]]; then
+elif [ $lang = "rust" ]; then
     # Compile first
     cargo build --release --target-dir /tmp/aoc_rust --manifest-path $aoc_path/rust/Cargo.toml
     exec="/tmp/aoc_rust/release/aoc_$year-$day"

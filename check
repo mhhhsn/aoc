@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env yash
 
 year=$1
 day=$2
@@ -21,5 +21,5 @@ else
     exit 1
 fi
 
-diff <(echo $got) "$aoc_path/data/$4.ans" && echo "Solved with $lang!"
+diff $aoc_path/data/$4.ans - <(echo "$got") && echo Solved wtih $lang!
 echo $got

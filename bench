@@ -1,10 +1,10 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env yash
 
 year=$1
 day=$2
 lang=$3
 input=$4
-warmups=${5:=0}
+warmups=${5:-0}
 
 script=$(readlink -f "$0")
 script_path=$(dirname "$script")
@@ -14,7 +14,7 @@ data_path="$aoc_path/data/$4.txt"
 
 # Check it is correct
 $script_path/check $1 $2 $3 $4 > /dev/null
-[[ ! $? ]] && echo "Incorrect solution" && exit 1
+[ ! $? ] && echo "Incorrect solution" && exit 1
 
 
 if [[ $lang == "python" ]]; then
@@ -28,4 +28,4 @@ else
     exit 1
 fi
 
-hyperfine --shell=none --warmup=$warmups --input=$data_path $exec
+hyperfine --shell=none --warmup=$warmups --input=$data_path "$exec"

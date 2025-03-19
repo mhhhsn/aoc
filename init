@@ -1,4 +1,4 @@
-#!/usr/bin/env yash
+#!/usr/bin/env sh
 
 year=$1
 day=$2
@@ -10,7 +10,7 @@ aoc_path=$script_path/$1/$2
 
 mkdir --parents $aoc_path
 
-if [[ ! -d $aoc_path/data ]]; then
+if [ ! -d $aoc_path/data ]; then
     # Data directory
     mkdir --parents $aoc_path/data
     for f in "test" "aoc"; do
@@ -21,14 +21,14 @@ if [[ ! -d $aoc_path/data ]]; then
 fi
 
 # Python
-if [[ ! -d $aoc_path/python ]]; then
+if [ ! -d $aoc_path/python ]; then
     mkdir --parents $aoc_path/python
     cp "$script_path/template/main.py" "$aoc_path/python/main.py"
     echo "*" > "$aoc_path/python/.gitignore"
 fi
 
 # Rust
-if [[ ! -d $aoc_path/rust ]]; then
+if [ ! -d $aoc_path/rust ]; then
     cargo new "$aoc_path/rust" --vcs none --name "aoc_$year-$day"
     cp "$script_path/template/main.rs" "$aoc_path/rust/src/main.rs"
     echo "*" > "$aoc_path/rust/.gitignore"

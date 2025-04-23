@@ -13,9 +13,8 @@ aoc_path=$script_path/$1/$2
 data_path="$aoc_path/data/$4.txt"
 
 # Check it is correct
-$script_path/check $1 $2 $3 $4 > /dev/null
+$script_path/check $1 $2 $3 $4 >/dev/null
 [ ! $? ] && echo "Incorrect solution" && exit 1
-
 
 if [ $lang = "python" ]; then
     exec="python $aoc_path/python/main.py"

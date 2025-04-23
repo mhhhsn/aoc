@@ -16,7 +16,7 @@ if [ ! -d $aoc_path/data ]; then
     for f in "test" "aoc"; do
         touch "$aoc_path/puzzle.txt"
         touch "$aoc_path/data/$f.txt"
-        echo "silver: ???\ngold: ???" > "$aoc_path/data/$f.ans"
+        echo "silver: ???\ngold: ???" >"$aoc_path/data/$f.ans"
     done
 fi
 
@@ -24,12 +24,12 @@ fi
 if [ ! -d $aoc_path/python ]; then
     mkdir --parents $aoc_path/python
     cp "$script_path/template/main.py" "$aoc_path/python/main.py"
-    echo "*" > "$aoc_path/python/.gitignore"
+    echo "*" >"$aoc_path/python/.gitignore"
 fi
 
 # Rust
 if [ ! -d $aoc_path/rust ]; then
     cargo new "$aoc_path/rust" --vcs none --name "aoc_$year-$day"
     cp "$script_path/template/main.rs" "$aoc_path/rust/src/main.rs"
-    echo "*" > "$aoc_path/rust/.gitignore"
+    echo "*" >"$aoc_path/rust/.gitignore"
 fi

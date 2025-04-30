@@ -1,24 +1,34 @@
 #!/usr/bin/env sh
 
-year=$1
-day=$2
-lang=$3
-input=$4
+usage="usage: check <year> <day> <language> <testfile>"
+year=${1?$usage}
+day=${2?$usage}
+lang=${3?$usage}
+input=${4?$usage}
 
+# get directory of this script
 script=$(readlink -f "$0")
 script_path=$(dirname "$script")
 
-aoc_path=$script_path/$1/$2
-data_path="$aoc_path/data/$4.txt"
+# find aoc and data paths
+aoc_path=$script_path/$year/$day
+data_path="$aoc_path/data/$input.txt"
 
-if [ $lang = "python" ]; then
-    got=$(cat $data_path | python $aoc_path/python/main.py)
-elif [ $lang = "rust" ]; then
-    got=$(cat $data_path | cargo run --manifest-path $aoc_path/rust/Cargo.toml --)
-else
-    echo "Unknown lang: $lang"
+case $lang in
+"python")
+    cmd="uv run --directory $aoc_path/python main.py"
+    ;;
+"rust")
+    cmd="cargo run --manifest-path $aoc_path/rust/Cargo.toml --"
+    ;;
+"*")
+    echo "unknown lang: $lang"
     exit 1
-fi
+    ;;
+esac
 
-echo "$got" | diff $aoc_path/data/$4.ans - && echo Solved wtih $lang!
-echo $got
+result=$(cat $data_path | $cmd)
+
+echo "$result" | diff $aoc_path/data/$4.ans - && echo Solved wtih $lang!
+echo -e "\n---stdout---"
+echo "$result"

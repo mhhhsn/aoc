@@ -1,30 +1,48 @@
 #!/usr/bin/env sh
 
-year=$1
-day=$2
-lang=$3
-input=$4
+usage="usage: bench <year> <day> <language> <testfile> [<warmups>]"
+year=${1?$usage}
+day=${2?$usage}
+lang=${3?$usage}
+input=${4?$usage}
 warmups=${5:-0}
 
+# get directory of this script
 script=$(readlink -f "$0")
 script_path=$(dirname "$script")
 
-aoc_path=$script_path/$1/$2
-data_path="$aoc_path/data/$4.txt"
+# find aoc and data paths
+aoc_path=$script_path/$year/$day
+data_path="$aoc_path/data/$input.txt"
 
-# Check it is correct
-$script_path/check $1 $2 $3 $4 >/dev/null
+# check solution is correct for this input
+$script_path/check $year $day $lang $input >/dev/null
 [ ! $? ] && echo "Incorrect solution" && exit 1
 
-if [ $lang = "python" ]; then
-    exec="python $aoc_path/python/main.py"
-elif [ $lang = "rust" ]; then
-    # Compile first
-    cargo build --release --target-dir /tmp/aoc_rust --manifest-path $aoc_path/rust/Cargo.toml
+case $lang in
+"python")
+    # Sync to create venv
+    uv sync \
+        --directory $aoc_path/python
+    # Bypass any `uv run` overhead and run .venv directly
+    exec="$aoc_path/python/.venv/bin/python $aoc_path/python/main.py"
+    ;;
+"rust")
+    # Compile to /tmp/aoc_rust and run binary
+    cargo build \
+        --release \
+        --target-dir /tmp/aoc_rust \
+        --manifest-path $aoc_path/rust/Cargo.toml
     exec="/tmp/aoc_rust/release/aoc_$year-$day"
-else
-    echo "Unknown lang: $lang"
+    ;;
+*)
+    echo "unknown lang: $lang"
     exit 1
-fi
+    ;;
+esac
 
-hyperfine --shell=none --warmup=$warmups --input=$data_path "$exec"
+hyperfine \
+    --shell none \
+    --warmup $warmups \
+    --input $data_path \
+    "$exec"

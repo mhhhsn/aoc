@@ -18,8 +18,8 @@ impl<T> Grid<T> {
         (0..)
             .map(move |n| {
                 self.grid
-                    .get(usize::try_from(y + n * dy).unwrap())
-                    .and_then(|row| row.get(usize::try_from(x + n * dx).unwrap()))
+                    .get(usize::try_from(y + n * dy).ok()?)
+                    .and_then(|row| row.get(usize::try_from(x + n * dx).ok()?))
             })
             .take_while(Option::is_some)
             .flatten()

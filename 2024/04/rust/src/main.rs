@@ -1,4 +1,6 @@
-use aoc::Grid;
+#![feature(iter_order_by)]
+
+use aoc::grid::{chebyshev_ball, Grid};
 use std::io;
 
 fn main() -> io::Result<()> {
@@ -17,19 +19,9 @@ fn main() -> io::Result<()> {
 }
 
 fn silver(grid: &Grid<char>) -> usize {
-    let dirs = [
-        (1, 1),
-        (1, 0),
-        (1, -1),
-        (0, 1),
-        (0, -1),
-        (-1, 1),
-        (-1, 0),
-        (-1, -1),
-    ];
     grid.points()
-        .flat_map(|p| dirs.into_iter().map(move |dp| grid.ray(p, dp)))
-        .map(|cs| cs.zip("XMAS".chars()).all(|(&a, b)| a == b))
+        .flat_map(|p| chebyshev_ball(1).map(move |dp| grid.ray(p, dp)))
+        .map(|cs| cs.take(4).eq_by("XMAS".chars(), |a, b| *a == b))
         .filter(|p| *p)
         .count()
 }

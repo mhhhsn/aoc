@@ -83,11 +83,13 @@ mod tests {
         let grid = Grid::new(vec![vec![1, 2, 3], vec![4, 5, 6], vec![7, 8, 9]]);
         assert!(grid.ray((0, 0), (1, 0)).eq(vec![1, 2, 3].iter()))
     }
+
     #[test]
     fn ray_vertical() {
         let grid = Grid::new(vec![vec![1, 2, 3], vec![4, 5, 6], vec![7, 8, 9]]);
         assert!(grid.ray((1, 0), (0, 1)).eq(vec![2, 5, 8].iter()))
     }
+
     #[test]
     fn ray_diagonal() {
         let grid = Grid::new(vec![vec![1, 2, 3], vec![4, 5, 6], vec![7, 8, 9]]);

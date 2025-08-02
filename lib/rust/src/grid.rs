@@ -6,10 +6,30 @@ pub struct Grid<T> {
 }
 
 type Point = (usize, usize);
-type Direction = (i64, i64);
+
+#[derive(PartialEq, Eq, Clone, Hash, Debug, Copy)]
+pub struct Direction {
+    x: i64,
+    y: i64,
+}
+
+impl From<(i64, i64)> for Direction {
+    fn from((x, y): (i64, i64)) -> Self {
+        Direction { x, y }
+    }
+}
+
+impl Direction {
+    fn cw(self) -> Self {
+        (self.y, -self.x).into()
+    }
+    fn acw(self) -> Self {
+        (-self.y, self.x).into()
+    }
+}
 
 pub fn chebyshev_ball(n: i64) -> impl Iterator<Item = Direction> {
-    (-n..=n).flat_map(move |x| (-n..=n).map(move |y| (x, y)))
+    (-n..=n).flat_map(move |x| (-n..=n).map(move |y| Direction { x, y }))
 }
 
 impl<T> Grid<T> {
@@ -38,16 +58,20 @@ impl<T> Grid<T> {
         (0..self.width).flat_map(|x| (0..self.height).map(move |y| (x, y)))
     }
 
-    pub fn move_pos(&self, (x, y): Point, (dx, dy): Direction, n: i64) -> Option<Point> {
-        let x = (i64::try_from(x).ok()? + n * dx).try_into().ok()?;
-        let y = (i64::try_from(y).ok()? + n * dy).try_into().ok()?;
+    pub fn move_pos(&self, (x, y): Point, d: Direction, n: i64) -> Option<Point> {
+        let x = (i64::try_from(x).ok()? + n * d.x).try_into().ok()?;
+        let y = (i64::try_from(y).ok()? + n * d.y).try_into().ok()?;
         let p = (x, y);
-        if self.is_in(p) { Some(p) } else { None }
+        if self.is_in(p) {
+            Some(p)
+        } else {
+            None
+        }
     }
 
-    pub fn ray(&self, p: Point, dp: Direction) -> impl Iterator<Item = &T> {
+    pub fn ray(&self, p: Point, d: Direction) -> impl Iterator<Item = &T> {
         (0..)
-            .map(move |n| self.move_pos(p, dp, n))
+            .map(move |n| self.move_pos(p, d, n))
             .take_while(Option::is_some)
             .flatten()
             .map(|p| self.at(p))
@@ -65,7 +89,7 @@ mod tests {
     fn chebyshev_ball_zero() {
         assert_eq!(
             chebyshev_ball(0).collect::<HashSet<_>>(),
-            [(0, 0)].iter().cloned().collect()
+            [Direction { x: 0, y: 0 }].iter().cloned().collect()
         )
     }
 
@@ -74,15 +98,15 @@ mod tests {
         assert_eq!(
             chebyshev_ball(1).collect::<HashSet<_>>(),
             [
-                (-1, -1),
-                (-1, 0),
-                (-1, 1),
-                (0, -1),
-                (0, 0),
-                (0, 1),
-                (1, -1),
-                (1, 0),
-                (1, 1)
+                Direction { x: -1, y: -1 },
+                Direction { x: -1, y: 0 },
+                Direction { x: -1, y: 1 },
+                Direction { x: 0, y: -1 },
+                Direction { x: 0, y: 0 },
+                Direction { x: 0, y: 1 },
+                Direction { x: 1, y: -1 },
+                Direction { x: 1, y: 0 },
+                Direction { x: 1, y: 1 }
             ]
             .iter()
             .cloned()
@@ -96,7 +120,7 @@ mod tests {
         assert_eq!(points.len(), 25);
         let norms = points
             .iter()
-            .map(|(x, y)| x.abs().max(y.abs()))
+            .map(|Direction { x, y }| x.abs().max(y.abs()))
             .collect::<Vec<_>>();
 
         assert_eq!(norms.iter().filter(|&&n| n == 0).count(), 1);
@@ -153,30 +177,30 @@ mod tests {
     #[test]
     fn ray_empty() {
         let grid = Grid::<u64>::new(vec![vec![]]);
-        assert!(grid.ray((1, 1), (1, 2)).eq(vec![].iter()))
+        assert!(grid.ray((1, 1), (1, 2).into()).eq(vec![].iter()))
     }
 
     #[test]
     fn ray_single_element() {
         let grid = Grid::<u64>::new(vec![vec![1]]);
-        assert!(grid.ray((0, 0), (1, 2)).eq(vec![1].iter()))
+        assert!(grid.ray((0, 0), (1, 2).into()).eq(vec![1].iter()))
     }
 
     #[test]
     fn ray_horizontal() {
         let grid = Grid::new(vec![vec![1, 2, 3], vec![4, 5, 6], vec![7, 8, 9]]);
-        assert!(grid.ray((0, 0), (1, 0)).eq(vec![1, 2, 3].iter()))
+        assert!(grid.ray((0, 0), (1, 0).into()).eq(vec![1, 2, 3].iter()))
     }
 
     #[test]
     fn ray_vertical() {
         let grid = Grid::new(vec![vec![1, 2, 3], vec![4, 5, 6], vec![7, 8, 9]]);
-        assert!(grid.ray((1, 0), (0, 1)).eq(vec![2, 5, 8].iter()))
+        assert!(grid.ray((1, 0), (0, 1).into()).eq(vec![2, 5, 8].iter()))
     }
 
     #[test]
     fn ray_diagonal() {
         let grid = Grid::new(vec![vec![1, 2, 3], vec![4, 5, 6], vec![7, 8, 9]]);
-        assert!(grid.ray((0, 0), (1, 2)).eq(vec![1, 8].iter()))
+        assert!(grid.ray((0, 0), (1, 2).into()).eq(vec![1, 8].iter()))
     }
 }

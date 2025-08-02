@@ -30,5 +30,5 @@ esac
 result=$(cat $data_path | $cmd)
 
 echo "$result" | diff $aoc_path/data/$4.ans - && echo Solved wtih $lang!
-echo -e "\n---stdout---"
+echo "\n---stdout---"
 echo "$result"

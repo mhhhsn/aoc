@@ -28,7 +28,10 @@ case $lang in
 esac
 
 result=$(cat $data_path | $cmd)
+diff=$(echo "$result" | diff $aoc_path/data/$4.ans -)
+code=$?
 
-echo "$result" | diff $aoc_path/data/$4.ans - && echo Solved wtih $lang!
+[ $code -eq 0 ] && echo Solved with $lang! || echo "$diff"
 echo "\n---stdout---"
 echo "$result"
+exit $code

@@ -1,35 +1,39 @@
 #![feature(slice_split_once)]
 
 use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::collections::BinaryHeap;
 use std::io;
 
 fn main() -> io::Result<()> {
-    let lines = io::stdin().lines().flatten().collect::<Vec<_>>();
-    let (rules, updates) = lines.split_once(String::is_empty).unwrap();
-    let manual = rules.iter().collect::<Manual>();
+    let mut lines = io::stdin().lines().flatten();
+    let mut heap = BinaryHeap::<(u16, u16)>::new();
 
-    let updates = updates
-        .iter()
-        .map(|up| {
-            up.split(',')
-                .map(|p| Page {
-                    number: p.parse::<u64>().unwrap(),
-                    manual: &manual,
-                })
-                .collect::<_>()
-        })
-        .collect::<Vec<Vec<_>>>();
+    while let Some(s) = lines.next() {
+        if let Some((a, b)) = s.split_once('|') {
+            heap.push((a.parse().unwrap(), b.parse().unwrap()));
+        } else {
+            break;
+        }
+    }
+    let order = heap.into_sorted_vec();
 
     let mut silver = 0;
     let mut gold = 0;
-    for mut up in updates {
-        let mid = up.len() / 2;
-        if up.is_sorted() {
-            silver += up[mid].number;
+
+    for line in lines {
+        let mut nums: Vec<u16> = line.split(',').map(|n| n.parse().unwrap()).collect();
+        let presort = nums.clone();
+        let mid = nums.len() / 2;
+
+        nums.sort_unstable_by(|&a, &b| match order.binary_search(&(a, b)) {
+            Ok(_) => Ordering::Less,
+            Err(_) => Ordering::Greater,
+        });
+
+        if nums.iter().eq(presort.iter()) {
+            silver += presort[mid];
         } else {
-            up.sort_unstable();
-            gold += up[mid].number;
+            gold += nums[mid];
         }
     }
 
@@ -37,51 +41,4 @@ fn main() -> io::Result<()> {
     println!("gold: {gold}");
 
     return Ok(());
-}
-#[derive(Debug)]
-struct Manual {
-    order: HashMap<u64, Vec<u64>>,
-}
-
-impl<'a> FromIterator<&'a String> for Manual {
-    fn from_iter<T: IntoIterator<Item = &'a String>>(rules: T) -> Self {
-        let mut order = HashMap::<u64, Vec<u64>>::new();
-        for rule in rules {
-            let (pre, post) = rule.split_once('|').unwrap();
-            order
-                .entry(pre.parse().unwrap())
-                .or_default()
-                .push(post.parse().unwrap());
-        }
-        Manual { order }
-    }
-}
-
-#[derive(Clone, Copy)]
-struct Page<'a> {
-    number: u64,
-    manual: &'a Manual,
-}
-
-impl PartialEq for Page<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.number == other.number
-    }
-}
-impl Eq for Page<'_> {}
-
-impl PartialOrd for Page<'_> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.manual.order.get(&self.number)?.contains(&other.number) {
-            Some(Ordering::Less)
-        } else {
-            Some(Ordering::Greater)
-        }
-    }
-}
-
-impl Ord for Page<'_> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap()
-    }
 }

@@ -9,8 +9,8 @@ type Point = (usize, usize);
 
 #[derive(PartialEq, Eq, Clone, Hash, Debug, Copy)]
 pub struct Direction {
-    x: i64,
-    y: i64,
+    pub x: i64,
+    pub y: i64,
 }
 
 impl From<(i64, i64)> for Direction {
@@ -20,11 +20,11 @@ impl From<(i64, i64)> for Direction {
 }
 
 impl Direction {
-    fn cw(self) -> Self {
-        (self.y, -self.x).into()
-    }
-    fn acw(self) -> Self {
+    pub fn cw(self) -> Self {
         (-self.y, self.x).into()
+    }
+    pub fn acw(self) -> Self {
+        (self.y, -self.x).into()
     }
 }
 
@@ -56,6 +56,10 @@ impl<T> Grid<T> {
 
     pub fn points(&self) -> impl Iterator<Item = Point> {
         (0..self.width).flat_map(|x| (0..self.height).map(move |y| (x, y)))
+    }
+
+    pub fn enumerate(&self) -> impl Iterator<Item = (Point, &T)> {
+        self.points().map(|p| (p, self.at(p).unwrap()))
     }
 
     pub fn move_pos(&self, (x, y): Point, d: Direction, n: i64) -> Option<Point> {

@@ -54,20 +54,29 @@ fn silver(grid: &Grid) -> usize {
     let xmases: Vec<Vec<((isize, isize), char)>> = dirs
         .iter()
         .map(|(dx, dy)| {
-            (1..4)
+            (0..4)
                 .map(move |n| (dx * n, dy * n))
-                .zip("MAS".chars())
+                .zip("XMAS".chars())
                 .collect()
         })
         .collect();
 
     grid.pts()
-        .filter(|&p| grid.at(p).is_some_and(|&c| c == 'X'))
         .flat_map(|p| xmases.iter().map(move |xmas| grid.check(p, xmas.iter())))
         .filter(|p| *p)
         .count()
 }
 
 fn gold(grid: &Grid) -> usize {
-    0
+    let dirs = vec![(-1, -1), (1, -1), (0, 0), (-1, 1), (1, 1)];
+
+    let xmases: Vec<Vec<((isize, isize), char)>> = vec!["MMASS", "SMASM", "SSAMM", "MSAMS"]
+        .iter()
+        .map(|x| dirs.clone().into_iter().zip(x.chars()).collect())
+        .collect();
+
+    grid.pts()
+        .flat_map(|p| xmases.iter().map(move |xmas| grid.check(p, xmas.iter())))
+        .filter(|p| *p)
+        .count()
 }

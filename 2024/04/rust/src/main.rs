@@ -1,46 +1,73 @@
-#![feature(iter_order_by)]
-
-use aoc::grid::{chebyshev_ball, Grid};
 use std::io;
 
 fn main() -> io::Result<()> {
-    let grid: Vec<Vec<char>> = io::stdin()
+    let grid = io::stdin()
         .lines()
-        .map(|line| line.unwrap().chars().collect())
-        .collect();
-    let grid = Grid::new(grid);
+        .flatten()
+        .map(|line| line.chars().collect())
+        .collect::<Vec<Vec<char>>>();
+    let grid = Grid(grid);
 
     let silver: usize = silver(&grid);
     let gold: usize = gold(&grid);
+
     println!("silver: {silver}");
     println!("gold: {gold}");
 
     return Ok(());
 }
 
-fn silver(grid: &Grid<char>) -> usize {
-    grid.points()
-        .flat_map(|p| chebyshev_ball(1).map(move |dp| grid.ray(p, dp)))
-        .map(|cs| cs.take(4).eq_by("XMAS".chars(), |a, b| *a == b))
+struct Grid(Vec<Vec<char>>);
+
+impl Grid {
+    fn at(&self, (x, y): (isize, isize)) -> Option<&char> {
+        self.0
+            .get(usize::try_from(y).ok()?)?
+            .get(usize::try_from(x).ok()?)
+    }
+
+    fn check<'a>(
+        &self,
+        (x, y): (isize, isize),
+        mut pat: impl Iterator<Item = &'a ((isize, isize), char)>,
+    ) -> bool {
+        pat.all(|((dx, dy), ch)| self.at((x + dx, y + dy)).is_some_and(|c| c == ch))
+    }
+
+    fn pts(&self) -> impl Iterator<Item = (isize, isize)> + use<'_> {
+        (0..self.0[0].len()).flat_map(|x| (0..self.0.len()).map(move |y| (x as isize, y as isize)))
+    }
+}
+
+fn silver(grid: &Grid) -> usize {
+    let dirs = vec![
+        (-1, -1),
+        (-1, 0),
+        (-1, 1),
+        (0, -1),
+        (0, 1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
+    ];
+
+    let xmases: Vec<Vec<((isize, isize), char)>> = dirs
+        .iter()
+        .map(|(dx, dy)| {
+            (1..4)
+                .map(move |n| (dx * n, dy * n))
+                .zip("MAS".chars())
+                .collect()
+        })
+        .collect();
+
+    grid.pts()
+        .filter(|&p| grid.at(p).is_some_and(|&c| c == 'X'))
+        .flat_map(|p| xmases.iter().map(move |xmas| grid.check(p, xmas.iter())))
         .filter(|p| *p)
         .count()
 }
 
-fn gold(grid: &Grid<char>) -> usize {
-    let xmas: Vec<(i64, i64)> = vec![(0, 0), (-1, -1), (1, -1), (-1, 1), (1, 1)];
-    grid.points()
-        .map(move |p| {
-            xmas.iter()
-                .map(|&d| grid.move_pos(p, d.into(), 1).and_then(|p| grid.at(p)))
-                .collect::<Option<Vec<_>>>()
-        })
-        .flatten()
-        .map(|cs| {
-            vec!["AMSMS", "AMMSS", "ASMSM", "ASSMM"]
-                .iter()
-                .map(|x| cs.iter().eq_by(x.chars(), |&&a, b| a == b))
-                .any(|p| p)
-        })
-        .filter(|p| *p)
-        .count()
+fn gold(grid: &Grid) -> usize {
+    0
 }

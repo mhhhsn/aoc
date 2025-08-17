@@ -21,6 +21,9 @@ case $lang in
 "rust")
     cmd="cargo run --manifest-path $aoc_path/rust/Cargo.toml --"
     ;;
+"rustr")
+    cmd="cargo run --release --manifest-path $aoc_path/rust/Cargo.toml --"
+    ;;
 "*")
     echo "unknown lang: $lang"
     exit 1

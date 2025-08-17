@@ -1,5 +1,7 @@
+use std::collections::HashSet;
 use std::{collections::HashMap, io};
 
+#[derive(Clone)]
 enum Cell {
     Empty,
     Obstacle,
@@ -37,7 +39,7 @@ impl Direction {
 
 fn main() -> io::Result<()> {
     let mut map = HashMap::new();
-    let mut pos = None;
+    let mut start = None;
     io::stdin()
         .lines()
         .flatten()
@@ -54,33 +56,50 @@ fn main() -> io::Result<()> {
             }
             '^' => {
                 map.insert((x, y), Cell::Empty);
-                pos = Some((x, y))
+                start = Some((x, y))
             }
             '#' => {
                 map.insert((x, y), Cell::Obstacle);
             }
             _ => panic!(),
         });
+    let start = start.unwrap();
 
+    let visited = path_len(&map, start.clone()).unwrap();
+    let silver: usize = visited.len();
+    let gold: usize = visited
+        .iter()
+        .filter(|&p| {
+            let mut map = map.clone();
+            map.insert(*p, Cell::Obstacle);
+            path_len(&map, start.clone()).is_none()
+        })
+        .count();
+    println!("silver: {silver}");
+    println!("gold: {gold}");
+
+    return Ok(());
+}
+
+fn path_len(
+    map: &HashMap<(isize, isize), Cell>,
+    mut pos: (isize, isize),
+) -> Option<HashSet<(isize, isize)>> {
     let mut visited = HashMap::new();
-    let mut pos = pos.unwrap();
     let mut dir = Direction::U;
 
     loop {
-        *visited.entry(pos).or_insert(0 as u8) |= dir.clone() as u8;
+        let before = visited.entry(pos).or_insert(0 as u8);
+        if *before & dir.clone() as u8 > 0 {
+            return None;
+        }
+        *before |= dir.clone() as u8;
 
         let ahead = dir.shift(pos);
         match map.get(&ahead) {
             Some(Cell::Empty) => pos = ahead,
             Some(Cell::Obstacle) => dir = dir.rotate(),
-            None => break,
+            None => return Some(visited.into_keys().collect()),
         };
     }
-
-    let silver: usize = visited.len();
-    let gold: usize = 0;
-    println!("silver: {silver}");
-    println!("gold: {gold}");
-
-    return Ok(());
 }

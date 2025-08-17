@@ -1,44 +1,68 @@
-use regex::{Captures, Regex};
 use std::io::{self, Read};
+
+#[derive(Debug)]
+enum Instruction {
+    Do,
+    Dont,
+    Mul(u64, u64),
+}
+
+impl From<&Instruction> for u64 {
+    fn from(val: &Instruction) -> Self {
+        match val {
+            Instruction::Mul(x, y) => x * y,
+            _ => 0,
+        }
+    }
+}
 
 fn main() -> io::Result<()> {
     let mut program = String::new();
     io::stdin().read_to_string(&mut program)?;
 
-    let re = Regex::new(r"mul\((\d{1,3}),(\d{1,3})\)").unwrap();
+    let instrs = (0..program.len())
+        .filter_map(|idx| {
+            let next = &program[idx..];
+            if next.starts_with("do()") {
+                Some(Instruction::Do)
+            } else if next.starts_with("don't()") {
+                Some(Instruction::Dont)
+            } else if next.starts_with("mul(") {
+                let mut first = 0;
+                let mut curr = 0;
 
-    let silver: u64 = re
-        .captures_iter(&program)
-        .map(self::execute_mul_capture)
-        .sum();
-
-    let gold_re = Regex::new(r"(mul)\(\d{1,3},\d{1,3}\)|(do)\(\)|(don't)\(\)").unwrap();
-
-    let mut captures = gold_re.captures_iter(&program).map(|c| c.extract::<1>());
-
-    let mut gold: u64 = 0;
-    while let Some((func, [name])) = captures.next() {
-        match name {
-            "mul" => gold += execute_mul_capture(re.captures(func).unwrap()),
-            "do" => (),
-            "don't" => {
-                while let Some((_, [n])) = captures.next() {
-                    if n == "do" {
-                        break;
-                    }
+                for ch in next.bytes().skip(4) {
+                    match (ch, curr) {
+                        ((b'0'..=b'9'), _) => curr = curr * 10 + (ch - b'0') as u64,
+                        (_, 0) => return None,
+                        (b',', _) => {
+                            first = curr;
+                            curr = 0;
+                        }
+                        (b')', _) => {
+                            return Some(Instruction::Mul(first, curr));
+                        }
+                        _ => return None,
+                    };
                 }
+                None
+            } else {
+                None
             }
-            _ => unreachable!(),
-        }
-    }
+        })
+        .collect::<Vec<_>>();
 
+    let silver: u64 = instrs.iter().map(u64::from).sum();
+    let (gold, _) = instrs
+        .iter()
+        .fold((0 as u64, true), |(acc, on), instr| match (instr, on) {
+            (Instruction::Do, _) => (acc, true),
+            (Instruction::Dont, _) => (acc, false),
+            (Instruction::Mul(_, _), true) => (acc + u64::from(instr), true),
+            _ => (acc, on),
+        });
     println!("silver: {silver}");
     println!("gold: {gold}");
 
     return Ok(());
-}
-
-fn execute_mul_capture(captures: Captures) -> u64 {
-    let (_, [x, y]) = captures.extract();
-    x.parse::<u64>().unwrap() * y.parse::<u64>().unwrap()
 }

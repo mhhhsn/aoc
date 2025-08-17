@@ -2,6 +2,3 @@
 name = "aoc_2024-06"
 version = "0.1.0"
 edition = "2021"
-
-[dependencies]
-aoc = { version = "0.1.0", path = "../../../lib/rust" }

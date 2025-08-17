@@ -1,43 +1,86 @@
-use std::io;
+use std::{collections::HashMap, io};
 
-use aoc::grid::{Direction, Grid};
-use std::collections::HashSet;
-
-fn main() -> io::Result<()> {
-    let grid: Vec<Vec<char>> = io::stdin()
-        .lines()
-        .map(|line| line.unwrap().chars().collect())
-        .collect();
-    let grid = Grid::new(grid);
-    let start = grid
-        .enumerate()
-        .filter(|(_, c)| **c == '^')
-        .next()
-        .unwrap()
-        .0;
-
-    let silver: usize = silver(&grid, start);
-    let gold: usize = gold(&grid);
-    println!("silver: {silver}");
-    println!("gold: {gold}");
-
-    return Ok(());
+enum Cell {
+    Empty,
+    Obstacle,
 }
 
-fn silver(grid: &Grid<char>, start: (usize, usize)) -> usize {
-    let mut pos = start;
-    let mut dir = Direction { x: 0, y: -1 };
-    let mut seen = HashSet::<(usize, usize)>::new();
-    loop {
-        seen.insert(pos);
-        match grid.move_pos(pos, dir, 1).and_then(|p| grid.at(p)) {
-            Some(&'#') => dir = dir.cw(),
-            Some(_) => pos = grid.move_pos(pos, dir, 1).unwrap(),
-            None => break seen.len(),
+#[derive(Clone)]
+enum Direction {
+    L = 0b1,
+    R = 0b10,
+    U = 0b100,
+    D = 0b1000,
+}
+
+impl Direction {
+    fn shift(&self, point: (isize, isize)) -> (isize, isize) {
+        let (x, y) = point;
+        match self {
+            Direction::L => (x - 1, y),
+            Direction::R => (x + 1, y),
+            Direction::U => (x, y - 1),
+            Direction::D => (x, y + 1),
+        }
+    }
+
+    fn rotate(&self) -> Self {
+        use Direction::*;
+        match self {
+            L => U,
+            R => D,
+            U => R,
+            D => L,
         }
     }
 }
 
-fn gold(grid: &Grid<char>) -> usize {
-    0
+fn main() -> io::Result<()> {
+    let mut map = HashMap::new();
+    let mut pos = None;
+    io::stdin()
+        .lines()
+        .flatten()
+        .enumerate()
+        .flat_map(|(y, line)| {
+            line.chars()
+                .enumerate()
+                .map(|(x, ch)| ([x as isize, y as isize], ch))
+                .collect::<Vec<_>>()
+        })
+        .for_each(|([x, y], ch)| match ch {
+            '.' => {
+                map.insert((x, y), Cell::Empty);
+            }
+            '^' => {
+                map.insert((x, y), Cell::Empty);
+                pos = Some((x, y))
+            }
+            '#' => {
+                map.insert((x, y), Cell::Obstacle);
+            }
+            _ => panic!(),
+        });
+
+    let mut visited = HashMap::new();
+    let mut pos = pos.unwrap();
+    let mut dir = Direction::U;
+
+    loop {
+        *visited.entry(pos).or_insert(0 as u8) |= dir.clone() as u8;
+
+        let ahead = dir.shift(pos);
+        match map.get(&ahead) {
+            Some(Cell::Empty) => pos = ahead,
+            Some(Cell::Obstacle) => dir = dir.rotate(),
+            None => break,
+        };
+    }
+
+    let silver: usize = visited.len();
+    let gold: usize = 0;
+    println!("silver: {silver}");
+    println!("gold: {gold}");
+
+    return Ok(());
 }

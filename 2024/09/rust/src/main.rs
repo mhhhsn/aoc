@@ -13,7 +13,7 @@ fn main() -> io::Result<()> {
         .collect();
 
     let silver: usize = silver(&disk_map);
-    let gold: u64 = 0;
+    let gold: usize = gold(&disk_map);
     println!("silver: {silver}");
     println!("gold: {gold}");
 
@@ -33,7 +33,7 @@ fn silver(input: &Vec<u8>) -> usize {
 
     let mut l = 0;
     let mut r = blocks.len() - 1;
-    loop  {
+    loop {
         while blocks[r].is_none() {
             r -= 1;
         }
@@ -47,5 +47,54 @@ fn silver(input: &Vec<u8>) -> usize {
         left.replace(right.take().unwrap());
     }
 
-    blocks.iter().enumerate().map(|(n, id)| n * id.unwrap_or_default()).sum()
+    blocks
+        .iter()
+        .enumerate()
+        .map(|(n, id)| n * id.unwrap_or_default())
+        .sum()
+}
+
+fn gold(input: &Vec<u8>) -> usize {
+    let mut blocks = input
+        .iter()
+        .chain([0, 0].iter()) // lol
+        .array_chunks()
+        .enumerate()
+        .map(|(n, [&f, &s])| [(Some(n), f as usize), (None, s as usize)])
+        .flatten()
+        .collect::<Vec<_>>();
+
+    let mut r = blocks.len();
+    while r > 0 {
+        r -= 1;
+        let (Some(_), f) = blocks[r] else {
+            continue;
+        };
+
+        // find some empty space and maybe split
+        let Some(l) = blocks.iter().position(|b| b.0.is_none() && b.1 >= f) else {
+            continue;
+        };
+        if l > r {
+            continue;
+        };
+
+        let (_, s) = &mut blocks[l];
+
+        let diff = *s - f;
+        if diff > 0 {
+            *s = f;
+            blocks.insert(l + 1, (None, diff));
+            r += 1;
+        }
+        blocks.swap(l, r);
+    }
+
+    blocks
+        .iter()
+        .map(|&(id, n)| [id].repeat(n))
+        .flatten()
+        .enumerate()
+        .map(|(n, id)| n * id.unwrap_or_default())
+        .sum()
 }

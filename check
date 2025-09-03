@@ -21,7 +21,7 @@ case $lang in
 "rust")
     cmd="cargo run --manifest-path $aoc_path/rust/Cargo.toml --"
     ;;
-"rustr")
+"rustc")
     cmd="cargo run --release --manifest-path $aoc_path/rust/Cargo.toml --"
     ;;
 "*")

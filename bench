@@ -17,13 +17,14 @@ data_path="$aoc_path/data/$input.txt"
 
 # check solution is correct for this input
 $script_path/check $year $day $lang $input >/dev/null
-[ ! $? ] && echo "Incorrect solution" && exit 1
+[ ! $? ] && echo "incorrect solution" && exit 1
 
 case $lang in
 "python")
     # Sync to create venv
     uv sync \
-        --directory $aoc_path/python
+        --directory \
+        $aoc_path/python
     # Bypass any `uv run` overhead and run .venv directly
     exec="$aoc_path/python/.venv/bin/python $aoc_path/python/main.py"
     ;;
@@ -32,7 +33,8 @@ case $lang in
     cargo build \
         --release \
         --target-dir /tmp/aoc_rust \
-        --manifest-path $aoc_path/rust/Cargo.toml
+        --manifest-path \
+        $aoc_path/rust/Cargo.toml
     exec="/tmp/aoc_rust/release/aoc_$year-$day"
     ;;
 *)
